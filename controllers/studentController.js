@@ -13,15 +13,7 @@ const grade = async (UserId) =>
   User.aggregate([
     // only include the given User by using $match
     { $match: { _id: new ObjectId(UserId) } },
-    {
-      $unwind: '$assignments',
-    },
-    {
-      $group: {
-        _id: new ObjectId(UserId),
-        overallGrade: { $avg: '$assignments.score' },
-      },
-    },
+    
   ]);
 
 module.exports = {
@@ -77,19 +69,6 @@ module.exports = {
       if (!User) {
         return res.status(404).json({ message: 'No such User exists' });
       }
-
-      const course = await Course.findOneAndUpdate(
-        { Users: req.params.UserId },
-        { $pull: { Users: req.params.UserId } },
-        { new: true }
-      );
-
-      if (!course) {
-        return res.status(404).json({
-          message: 'User deleted, but no courses found',
-        });
-      }
-
       res.json({ message: 'User successfully deleted' });
     } catch (err) {
       console.log(err);
@@ -97,47 +76,4 @@ module.exports = {
     }
   },
 
-  // Add an assignment to a User
-  async addAssignment(req, res) {
-    console.log('You are adding an assignment');
-    console.log(req.body);
-
-    try {
-      const User = await User.findOneAndUpdate(
-        { _id: req.params.UserId },
-        { $addToSet: { assignments: req.body } },
-        { runValidators: true, new: true }
-      );
-
-      if (!User) {
-        return res
-          .status(404)
-          .json({ message: 'No User found with that ID :(' });
-      }
-
-      res.json(User);
-    } catch (err) {
-      res.status(500).json(err);
-    }
-  },
-  // Remove assignment from a User
-  async removeAssignment(req, res) {
-    try {
-      const User = await User.findOneAndUpdate(
-        { _id: req.params.UserId },
-        { $pull: { assignment: { assignmentId: req.params.assignmentId } } },
-        { runValidators: true, new: true }
-      );
-
-      if (!User) {
-        return res
-          .status(404)
-          .json({ message: 'No User found with that ID :(' });
-      }
-
-      res.json(User);
-    } catch (err) {
-      res.status(500).json(err);
-    }
-  },
-};
+  // Update a User
